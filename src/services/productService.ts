@@ -1,7 +1,7 @@
 import ProductRepository from "../repositories/productsRepository";
 import { Product } from "./scrapingService";
 
-interface PromoProduct extends Product {
+export interface PromoProduct extends Product {
   oldPrice: number;
   percentagePromo: number;
 }

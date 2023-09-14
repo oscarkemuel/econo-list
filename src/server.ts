@@ -1,5 +1,5 @@
+import 'dotenv/config'
 import express from 'express';
-import ScrapingService from './services/scrapingService';
 import { prismaClient } from './database';
 import PromoProcessController from './controllers/promoProcessController';
 
