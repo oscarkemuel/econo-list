@@ -1,0 +1,8 @@
+-- CreateTable
+CREATE TABLE "ProductHistory" (
+    "id" INTEGER NOT NULL PRIMARY KEY AUTOINCREMENT,
+    "title" TEXT NOT NULL,
+    "price" TEXT NOT NULL,
+    "listId" TEXT NOT NULL,
+    "createdAt" DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP
+);

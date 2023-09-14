@@ -1,16 +1,24 @@
 import express from 'express';
 import ScrapingService from './services/scrapingService';
+import { prismaClient } from './database';
+import PromoProcessController from './controllers/promoProcessController';
 
-const app = express();
+prismaClient.$connect()
+.then(() => {
+  console.log('📦 - Prisma connected!');
 
-app.get('/', async (req, res) => {
-  const scrapingService = new ScrapingService();
-  const products = await scrapingService.getProductsFromList('26AXMBD99MXXX');
+  const app = express();
+  
+  app.use(express.json());
+  const promoProcessController = new PromoProcessController();
 
-  console.log(products.length);
-  res.json(products);
-});
+  app.get('/process-promo-list/:amazonListId', async (req, res) => {
+    return promoProcessController.processPromoList(req, res);
+  });
 
-app.listen(8000, () => {
-  console.log('App listening on port 8000!');
+  app.listen(8000, () => {
+    console.log(`🚪 - Server is running at port 8000`);
+  });
+}).catch((err: any) => {
+  console.log('Prisma error', err);
 });
