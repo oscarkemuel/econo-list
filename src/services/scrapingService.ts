@@ -53,6 +53,7 @@ class ScrapingService {
       ],
       headless: 'new',
       ignoreDefaultArgs: ['--disable-extensions'],
+      executablePath: "/usr/bin/google-chrome",
     });
     const page = await browser.newPage();
     await page.goto(`https://www.amazon.com.br/hz/wishlist/printview/${amazonListId}?target=_blank&ref_=lv_pv&filter=unpurchased&sort=default`, {
