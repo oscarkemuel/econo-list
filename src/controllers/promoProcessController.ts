@@ -5,6 +5,7 @@ class PromoProcessController {
   private promoProcessService = new PromoProcessService();
 
   async processPromoListToTelegram(req: Request, res: Response) {
+    console.log('LOG: Starting processPromoListToTelegram controller');
     const { amazonListId } = req.params;
 
     this.promoProcessService.processPromoList(amazonListId);
