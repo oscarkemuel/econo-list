@@ -48,10 +48,11 @@ class ScrapingService {
     const browser = await puppeteer.launch({
       'args' : [
         '--no-sandbox',
-        '--disable-setuid-sandbox'
+        '--disable-setuid-sandbox',
+        '--disable-feature=site-per-process',
       ],
-      headless: true,
-      ignoreDefaultArgs: ['--disable-extensions']
+      headless: 'new',
+      ignoreDefaultArgs: ['--disable-extensions'],
     });
     const page = await browser.newPage();
     await page.goto(`https://www.amazon.com.br/hz/wishlist/printview/${amazonListId}?target=_blank&ref_=lv_pv&filter=unpurchased&sort=default`, {
@@ -86,6 +87,7 @@ class ScrapingService {
 
     await browser.close();
 
+    console.log(`LOG: ${products.length} products found on scraping`);
     return products;
   }
 }

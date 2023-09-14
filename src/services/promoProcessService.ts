@@ -43,6 +43,7 @@ class PromoProcessService {
 
     if (products.length === 0) {
       await this.productService.saveProducts(currentProducts, amazonListId);
+      console.log(`First time scraping. ${currentProducts.length} products found on scraping`)
       return { products: await this.productService.getAllProducts() };
     }
 
@@ -53,9 +54,13 @@ class PromoProcessService {
     if (promoProducts.length > 0) {
       const message = await this.formatMessageFromPromoList(promoProducts);
       await this.telegramService.sendMessage(message);
+      console.log("LOG: Message sent to telegram with promos")
+    } else {
+      console.log(`LOG: No promos found. ${products.length} products in database and ${currentProducts.length} products found on scraping`)
     }
 
     await this.productService.replaceAllProducts(currentProducts, amazonListId);
+    console.log(`LOG: Products replaced on database. ${currentProducts.length} products found on scraping`)
 
     return { products };
   }
