@@ -18,9 +18,7 @@ class ScrapingService {
     return `${innerHTML}`.trim();
   }
 
-  private async getTitleFromRow(
-    row: ElementHandle,
-  ): Promise<string | null> {
+  private async getTitleFromRow(row: ElementHandle): Promise<string | null> {
     const infosElement = await row.$("td:nth-child(2)");
     const titleElement = await infosElement?.$("span");
 
@@ -35,9 +33,7 @@ class ScrapingService {
     return null;
   }
 
-  private async getPriceFromRow(
-    row: ElementHandle,
-  ): Promise<number | null> {
+  private async getPriceFromRow(row: ElementHandle): Promise<number | null> {
     const priceElement = await row.$("td:nth-child(4) > span");
     if (priceElement) {
       const value = (await priceElement.evaluate(
@@ -55,16 +51,16 @@ class ScrapingService {
         "--no-sandbox",
         "--disable-setuid-sandbox",
         "--disable-feature=site-per-process",
-        "--ignore-certificate-errors"
+        "--ignore-certificate-errors",
       ],
-      headless: 'new',
+      headless: "new",
       ignoreDefaultArgs: ["--disable-extensions"],
       timeout: 0,
     });
     console.log("LOG: Browser launched");
     const page = await browser.newPage();
-    page.setDefaultNavigationTimeout(0); 
-    // blocking images
+    page.setDefaultNavigationTimeout(0);
+    // blocking images and stylesheets
     await page.setRequestInterception(true);
     page.on("request", (req) => {
       if (
@@ -78,24 +74,38 @@ class ScrapingService {
       }
     });
 
-    const navigationPromise = page.waitForNavigation({waitUntil: "domcontentloaded"});
-    await page.goto(
-      `https://www.amazon.com.br/hz/wishlist/printview/${amazonListId}?target=_blank&ref_=lv_pv&filter=unpurchased&sort=default`,
-      {
-        waitUntil: "domcontentloaded",
-        timeout: 0,
-      }
-    );
-    // await page.goto("file:///home/oscar/Desktop/ontem.html", {
-    //   waitUntil: "domcontentloaded",
-    //   timeout: 0,
-    // });
-    await navigationPromise;
+    let tableBody: ElementHandle | null = null;
+    let retries = 0;
+    const maxRetries = 5;
 
-    const tableBody = await page.waitForSelector(
-      "#a-page > div > table > tbody"
-    );
-    await navigationPromise;
+    while (!tableBody && retries < maxRetries) {
+      try {
+        await page.goto(
+          `https://www.amazon.com.br/hz/wishlist/printview/${amazonListId}?target=_blank&ref_=lv_pv&filter=unpurchased&sort=default`,
+          {
+            waitUntil: "domcontentloaded",
+            timeout: 0,
+          }
+        );
+
+        tableBody = await page.waitForSelector(
+          "#a-page > div > table > tbody",
+          {
+            timeout: 10000
+          }
+        );
+      } catch (error) {
+        console.log(`Failed to load the page, retrying... (${retries + 1})`);
+        retries += 1;
+      }
+    }
+
+    if (!tableBody) {
+      console.log("Max retries reached. Exiting...");
+      await browser.close();
+      return [];
+    }
+
     const tableRows = await tableBody!.$$("tr");
 
     const products: Product[] = [];
