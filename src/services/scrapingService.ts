@@ -54,14 +54,14 @@ class ScrapingService {
       ignoreDefaultArgs: ['--disable-extensions']
     });
     const page = await browser.newPage();
-    // await page.goto(`https://www.amazon.com.br/hz/wishlist/printview/${amazonListId}?target=_blank&ref_=lv_pv&filter=unpurchased&sort=default`, {
-    //   waitUntil: "networkidle0",
-    //   timeout: 0,
-    // });
-    await page.goto("file:///home/oscar/Desktop/ontem.html", {
+    await page.goto(`https://www.amazon.com.br/hz/wishlist/printview/${amazonListId}?target=_blank&ref_=lv_pv&filter=unpurchased&sort=default`, {
       waitUntil: "networkidle0",
       timeout: 0,
     });
+    // await page.goto("file:///home/oscar/Desktop/ontem.html", {
+    //   waitUntil: "networkidle0",
+    //   timeout: 0,
+    // });
 
     const tableBody = await page.waitForSelector(
       "#a-page > div > table > tbody"
