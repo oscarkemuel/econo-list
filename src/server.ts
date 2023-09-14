@@ -13,7 +13,7 @@ prismaClient.$connect()
   const promoProcessController = new PromoProcessController();
 
   app.get('/process-promo-list/:amazonListId', async (req, res) => {
-    return promoProcessController.processPromoList(req, res);
+    return promoProcessController.processPromoListToTelegram(req, res);
   });
 
   app.listen(8000, () => {

@@ -4,12 +4,15 @@ import PromoProcessService from '../services/promoProcessService';
 class PromoProcessController {
   private promoProcessService = new PromoProcessService();
 
-  async processPromoList(req: Request, res: Response) {
+  async processPromoListToTelegram(req: Request, res: Response) {
     const { amazonListId } = req.params;
 
-    const result = await this.promoProcessService.processPromoList(amazonListId);
+    this.promoProcessService.processPromoList(amazonListId);
 
-    return res.json(result);
+    res.status(200).send({
+      status: 'OK',
+      time: `${new Date().toLocaleString('pt-BR')}`
+    });
   }
 }
 
