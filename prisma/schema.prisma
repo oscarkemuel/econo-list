@@ -11,7 +11,7 @@ datasource db {
 }
 
 model ProductHistory {
-  id        Int      @id @default(autoincrement())
+  id        String   @id
   title     String
   price     Float
   listId    String

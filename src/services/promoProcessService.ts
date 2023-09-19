@@ -18,7 +18,9 @@ class PromoProcessService {
     let message = "🔥Livros mais baratos🔥\n\n";
 
     for (let product of products) {
-      const escapedTitle = product.title.replace(
+    const url = `https://www.amazon.com.br/dp/${product.id}`;
+
+    const escapedTitle = product.title.replace(
         /[_*\[\]()~>#+\-|={}.!]/g,
         "\\$&"
       );
@@ -26,10 +28,11 @@ class PromoProcessService {
       message += `💰 De ~${this.floatToReal(product.oldPrice).replace(
         /[_*\[\]()~>#+\-|={}.!]/g,
         "\\$&"
-      )}~ por *${this.floatToReal(product.price).replace(
+      )}~ por *${this.floatToReal(product.price!).replace(
         /[_*\[\]()~>#+\-|={}.!]/g,
         "\\$&"
-      )}*\n\n`;
+      )}*`;
+      message += `\n🔗 [Comprar](${url})\n\n`;
     }
 
     return message;

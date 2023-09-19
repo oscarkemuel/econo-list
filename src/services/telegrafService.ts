@@ -14,7 +14,8 @@ class TelegrafService {
   public async sendMessage(message: string) {
     try {
       await this.bot.telegram.sendMessage(this.telegramChatId, message, {
-        parse_mode: 'MarkdownV2'
+        parse_mode: 'MarkdownV2',
+        disable_web_page_preview: true
       });
     } catch (error) {
       console.log('Error on send message', error);

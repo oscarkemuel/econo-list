@@ -26,10 +26,10 @@ class ProductService {
   async promoProducts(currentProducts: Product[], products: Product[]) {
     const promoProducts: PromoProduct[] = [];
 
-    for(let currentProduct of currentProducts) {
-      const product = products.find(product => product.title === currentProduct.title);
+    for (let currentProduct of currentProducts) {
+      const product = products.find(product => product.id === currentProduct.id);
 
-      if (product) {
+      if (product && product.price && currentProduct.price) {
         const currentPrice = currentProduct.price
         const oldPrice = product.price;
         const percentagePromo = 100 - (currentPrice * 100 / oldPrice);
@@ -40,13 +40,25 @@ class ProductService {
             title: currentProduct.title,
             price: currentPrice,
             oldPrice,
-            percentagePromo: percentagePromo.toFixed(2) as unknown as number
+            percentagePromo: percentagePromo.toFixed(2) as unknown as number,
+            id: currentProduct.id
           });
         }
       }
+
+      if (product && product.price === 0 && currentProduct.price && currentProduct.price > 0) {
+        const currentPrice = currentProduct.price
+
+        promoProducts.push({
+          title: currentProduct.title,
+          price: currentPrice,
+          oldPrice: 0,
+          percentagePromo: 100.00,
+          id: currentProduct.id
+        });
+      }
     }
 
-    // da maior promoção para a menor
     const sortedPromoProducts = promoProducts.sort((a, b) => Number(b.percentagePromo) - Number(a.percentagePromo));
 
     return sortedPromoProducts;
