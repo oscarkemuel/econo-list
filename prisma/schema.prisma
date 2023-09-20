@@ -13,7 +13,8 @@ datasource db {
 model ProductHistory {
   id        String   @id
   title     String
-  price     Float
+  price     Float    @default(0)
   listId    String
+  freight   String   @default("")
   createdAt DateTime @default(now())
 }

@@ -18,9 +18,9 @@ class PromoProcessService {
     let message = "🔥Livros mais baratos🔥\n\n";
 
     for (let product of products) {
-    const url = `https://www.amazon.com.br/dp/${product.id}`;
+      const url = `https://www.amazon.com.br/dp/${product.id}`;
 
-    const escapedTitle = product.title.replace(
+      const escapedTitle = product.title.replace(
         /[_*\[\]()~>#+\-|={}.!]/g,
         "\\$&"
       );
@@ -32,6 +32,10 @@ class PromoProcessService {
         /[_*\[\]()~>#+\-|={}.!]/g,
         "\\$&"
       )}*`;
+      if (product.freight) message += `\n📦 ${product.freight}`.replace(
+        /[_*\[\]()~>#+\-|={}.!]/g,
+        "\\$&"
+      );
       message += `\n🔗 [Comprar](${url})\n\n`;
     }
 

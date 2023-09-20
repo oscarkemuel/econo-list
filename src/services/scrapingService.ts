@@ -4,23 +4,32 @@ export interface Product {
   id: string;
   title: string;
   price?: number;
+  freight?: string;
 }
 
 class ScrapingService {
   private async getInfos(row: ElementHandle) {
     const title = await row.$('a[id*="itemName"]');
     const complement = await row.$('span[id*="item-byline"]');
+    const freight = await row.$(
+      'span[data-csa-c-element-id*="list-desktop-wishlist-item-info-delivery-badge"]'
+    );
+    const freightText = await freight?.evaluate((node) => node.innerText);
+    const isPaidShipping = freightText?.includes("+");
 
     if (title && complement) {
       const titleText = await title.evaluate((node) => node.title);
-      const complementText = await complement.evaluate((node) => node.innerHTML);
+      const complementText = await complement.evaluate(
+        (node) => node.innerHTML
+      );
       const href = await title.evaluate((node) => node.href);
       const match = href.match(/\/dp\/([^\/\?]+)/);
       const id = match ? match[1] : null;
 
       return {
         id,
-        title: `${titleText} - ${complementText.replace('\n', '').trim()}`,
+        title: `${titleText} - ${complementText.replace("\n", "").trim()}`,
+        freight: isPaidShipping && freightText ? freightText : ''
       };
     }
 
@@ -71,12 +80,9 @@ class ScrapingService {
           }
         );
 
-        tableBody = await page.waitForSelector(
-          "#g-items",
-          {
-            timeout: 10000
-          }
-        );
+        tableBody = await page.waitForSelector("#g-items", {
+          timeout: 10000,
+        });
       } catch (error) {
         console.log(`Failed to load the page, retrying... (${retries + 1})`);
         retries += 1;
@@ -110,21 +116,29 @@ class ScrapingService {
     if (tableRows) {
       for (let i = 0; i < tableRows.length; i += 1) {
         const row = tableRows[i];
-        const price = await row.evaluate(
-          (node) => node.getAttribute("data-price")
+        const price = await row.evaluate((node) =>
+          node.getAttribute("data-price")
         );
 
         if (price) {
           const infos = await this.getInfos(row);
 
-          const newPrice = Number(price) == -Infinity || Number(price) == Infinity ? 0 : Number(price);
+          const newPrice =
+            Number(price) == -Infinity || Number(price) == Infinity
+              ? 0
+              : Number(price);
 
           if (infos?.title && price && infos?.id) {
-            products.push({ title: infos.title, price: newPrice, id: infos.id });
+            products.push({
+              id: infos.id,
+              title: infos.title,
+              price: newPrice,
+              freight: infos.freight
+            });
           }
         }
 
-        if(!price) {
+        if (!price) {
           const infos = await this.getInfos(row);
 
           if (infos?.title && infos?.id) {

@@ -41,7 +41,8 @@ class ProductService {
             price: currentPrice,
             oldPrice,
             percentagePromo: percentagePromo.toFixed(2) as unknown as number,
-            id: currentProduct.id
+            id: currentProduct.id,
+            freight: currentProduct.freight
           });
         }
       }
@@ -54,7 +55,8 @@ class ProductService {
           price: currentPrice,
           oldPrice: 0,
           percentagePromo: 100.00,
-          id: currentProduct.id
+          id: currentProduct.id,
+          freight: currentProduct.freight
         });
       }
     }
