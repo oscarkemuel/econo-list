@@ -1,46 +1,29 @@
 import puppeteer, { ElementHandle } from "puppeteer";
 
 export interface Product {
+  id: string;
   title: string;
-  price: number;
+  price?: number;
 }
 
 class ScrapingService {
-  private formatTitle(innerHTML: string): string {
-    const spanText = innerHTML.match(/<span class="a-text-bold">(.*?)<\/span>/);
+  private async getInfos(row: ElementHandle) {
+    const title = await row.$('a[id*="itemName"]');
+    const complement = await row.$('span[id*="item-byline"]');
 
-    const brText = innerHTML.match(/<br>(.*?)\|/);
+    if (title && complement) {
+      const titleText = await title.evaluate((node) => node.title);
+      const complementText = await complement.evaluate((node) => node.innerHTML);
+      const href = await title.evaluate((node) => node.href);
+      const match = href.match(/\/dp\/([^\/\?]+)/);
+      const id = match ? match[1] : null;
 
-    if (spanText && brText) {
-      return `${spanText[1]} - ${brText[1]}`.trim();
+      return {
+        id,
+        title: `${titleText} - ${complementText.replace('\n', '').trim()}`,
+      };
     }
 
-    return `${innerHTML}`.trim();
-  }
-
-  private async getTitleFromRow(row: ElementHandle): Promise<string | null> {
-    const infosElement = await row.$("td:nth-child(2)");
-    const titleElement = await infosElement?.$("span");
-
-    if (titleElement && infosElement) {
-      const fullTitle = (await infosElement.evaluate(
-        (node: Element) => node.innerHTML
-      )) as string;
-
-      return this.formatTitle(fullTitle);
-    }
-
-    return null;
-  }
-
-  private async getPriceFromRow(row: ElementHandle): Promise<number | null> {
-    const priceElement = await row.$("td:nth-child(4) > span");
-    if (priceElement) {
-      const value = (await priceElement.evaluate(
-        (node: Element) => node.textContent
-      )) as string;
-      return Number(value.replace("R$", "").replace(",", "."));
-    }
     return null;
   }
 
@@ -81,7 +64,7 @@ class ScrapingService {
     while (!tableBody && retries < maxRetries) {
       try {
         await page.goto(
-          `https://www.amazon.com.br/hz/wishlist/printview/${amazonListId}?target=_blank&ref_=lv_pv&filter=unpurchased&sort=default`,
+          `https://www.amazon.com.br/hz/wishlist/ls/${amazonListId}?ref_=wl_share&viewType=list`,
           {
             waitUntil: "domcontentloaded",
             timeout: 0,
@@ -89,7 +72,7 @@ class ScrapingService {
         );
 
         tableBody = await page.waitForSelector(
-          "#a-page > div > table > tbody",
+          "#g-items",
           {
             timeout: 10000
           }
@@ -106,23 +89,49 @@ class ScrapingService {
       return [];
     }
 
-    const tableRows = await tableBody!.$$("tr");
-
     const products: Product[] = [];
+    let isEndList = false;
+
+    while (!isEndList) {
+      let previousHeight = await page.evaluate("document.body.scrollHeight");
+      await page.evaluate("window.scrollTo(0, document.body.scrollHeight)");
+      await page.waitForFunction(
+        `document.body.scrollHeight > ${previousHeight}`
+      );
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+      const endText = await page.evaluate(
+        () => document.querySelector("#endOfListMarker")?.textContent
+      );
+      if (endText) isEndList = true;
+    }
+
+    const tableRows = await tableBody!.$$("li");
 
     if (tableRows) {
       for (let i = 0; i < tableRows.length; i += 1) {
         const row = tableRows[i];
-        const [title, price] = await Promise.all([
-          this.getTitleFromRow(row),
-          this.getPriceFromRow(row),
-        ]);
+        const price = await row.evaluate(
+          (node) => node.getAttribute("data-price")
+        );
 
-        if (title && price) {
-          products.push({ title, price });
+        if (price) {
+          const infos = await this.getInfos(row);
+
+          const newPrice = Number(price) == -Infinity || Number(price) == Infinity ? 0 : Number(price);
+
+          if (infos?.title && price && infos?.id) {
+            products.push({ title: infos.title, price: newPrice, id: infos.id });
+          }
+        }
+
+        if(!price) {
+          const infos = await this.getInfos(row);
+
+          if (infos?.title && infos?.id) {
+            products.push({ title: infos.title, id: infos.id });
+          }
         }
       }
-      console.log(`LOG: passed ${tableRows.length} rows`);
     }
 
     await page.close();

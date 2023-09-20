@@ -16,8 +16,9 @@ class ProductRepository {
     for(let product of products) {
       await this.repository.create({
         data: {
+          id: product.id,
           title: product.title,
-          price: product.price,
+          price: product.price || 0.0,
           listId: amazonListId
         }
       });
