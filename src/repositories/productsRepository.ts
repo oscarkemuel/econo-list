@@ -18,8 +18,9 @@ class ProductRepository {
         data: {
           id: product.id,
           title: product.title,
-          price: product.price || 0.0,
-          listId: amazonListId
+          price: product.price,
+          listId: amazonListId,
+          freight: product.freight,
         }
       });
     }
